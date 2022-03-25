@@ -5,25 +5,21 @@ import javafx.geometry.Insets
 import javafx.geometry.Pos
 import javafx.scene.Scene
 import javafx.scene.control.*
+import javafx.scene.input.KeyCombination
 import javafx.scene.layout.*
 import javafx.scene.paint.Color
 import javafx.stage.FileChooser
 import javafx.stage.Stage
+import java.io.File
+import java.io.IOException
 
+import java.io.PrintWriter
+import java.util.logging.Level
+import java.util.logging.Logger
+
+
+@Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
 class Notepad : Application() {
-
-    private fun openFile(stage: Stage)
-    {
-        val fileChooser = FileChooser();
-        fileChooser.title = "Select file to open"
-        fileChooser.showOpenDialog(stage)
-    }
-    //    private fun saveFile(stage: Stage)
-//    {
-//
-//        val fileChooser = FileChooser();
-//        fileChooser.showSaveDialog(stage)
-//    }
     private fun openNewWindow(infoText: String, title: String)
     {
         val info = Label(infoText)
@@ -41,12 +37,45 @@ class Notepad : Application() {
     override fun start(stage: Stage) {
         val vBox = VBox()
         val scene = Scene(vBox, 640.0, 480.0)
+        val textArea = TextArea()
+
+        val fileChooser = FileChooser()
+        fileChooser.initialFileName = "Note.txt"
+        val extFilter = FileChooser.ExtensionFilter("TXT files (*.txt)", "*.txt")
+        fileChooser.extensionFilters.add(extFilter)
+        var file: File
 
         val menuBar = MenuBar()
         val fileMenu = Menu("File")
+        val saveFile = MenuItem("Save file")
+        saveFile.accelerator = KeyCombination.keyCombination("Ctrl+S")
+
         val openFile = MenuItem("Open a File")
-        fileMenu.items.add(openFile)
-        openFile.setOnAction { openFile(stage) }
+        openFile.accelerator = KeyCombination.keyCombination("Ctrl+O")
+        openFile.setOnAction {
+           try{
+                fileChooser.title = "Select file to open"
+                file = fileChooser.showOpenDialog(stage)
+                textArea.text = file.readText()
+                stage.title = "${file.name} : ${stage.title}"
+            }
+           catch(ex: IOException) {
+                   Logger.getLogger(Notepad::class.java.name).log(java.util.logging.Level.SEVERE, null, ex)
+           }
+        }
+        saveFile.setOnAction {
+            try
+             {
+                val writer = PrintWriter (file)
+                writer.println(textArea.text)
+                writer.close()
+            }
+
+            catch (ex: IOException) {
+                Logger.getLogger(Notepad::class.java.name).log(Level.SEVERE, null, ex)
+            }
+            }
+        fileMenu.items.addAll(openFile, saveFile)
 
         val editMenu = Menu("Edit")
         val formatMenu = Menu("Format")
@@ -61,7 +90,7 @@ class Notepad : Application() {
 
         menuBar.menus.addAll(fileMenu, editMenu, formatMenu, viewMenu, aboutMenu)
 
-        val textArea = TextArea()
+
         vBox.children.addAll(menuBar, textArea)
         textArea.maxHeight = 1920.0
         textArea.prefHeight = 1920.0
