@@ -16,6 +16,7 @@ import java.io.IOException
 import java.io.PrintWriter
 import java.util.logging.Level
 import java.util.logging.Logger
+import kotlin.system.exitProcess
 
 //Ignore null for this var file fuc*er... Details later
 @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
@@ -40,6 +41,10 @@ class Notepad : Application() {
         newWindow.height = 200.0
         newWindow.show()
     }
+
+    object Singleton {
+        var windowsAmount: Int? = 1
+    }
     override fun start(stage: Stage) {
         //Creating a layout, scene and main text Area as it's notepad
         val vBox = VBox()
@@ -56,11 +61,26 @@ class Notepad : Application() {
         //I fought a lot with this fucker... nullable variable that gives file saved or opened. Its nullable as you can save before picking a file
         var file: File? = null
 
+
         //Creating a Menu bar where Menu items will be placed
         val menuBar = MenuBar()
 
         //Creating file menu items and its subitems
         val fileMenu = Menu("File")
+
+        val newFile = MenuItem("New File")
+        newFile.setOnAction {
+            file = null
+            textArea.text = ""
+        }
+        newFile.accelerator = KeyCombination.keyCombination("Ctrl+N")
+
+        val newWindow = MenuItem("New Window")
+        newWindow.setOnAction {
+            start(Stage())
+            Singleton.windowsAmount = Singleton.windowsAmount!! + 1
+        }
+        newWindow.accelerator = KeyCombination.keyCombination("Ctrl+Shift+N")
 
         val saveFile = MenuItem("Save file")
         //Giving saveFile an action listener
@@ -100,8 +120,39 @@ class Notepad : Application() {
                    Logger.getLogger(Notepad::class.java.name).log(Level.SEVERE, null, ex)
            }
         }
+
+        val saveAs = MenuItem("Save as")
+        saveAs.setOnAction {
+            try {
+                //if that checks value of file and opens a save dialog when it has no valu
+                file = fileChooser.showSaveDialog(stage)
+                val writer = PrintWriter(file)
+                writer.println(textArea.text)
+                writer.close()
+                stage.title = "${file!!.name} : ${stage.title}"
+            }
+            catch (ex: IOException) {
+                Logger.getLogger(Notepad::class.java.name).log(Level.SEVERE, null, ex)
+            }
+        }
+        saveAs.accelerator = KeyCombination.keyCombination("Ctrl+Shift+S")
+
+        val separator = SeparatorMenuItem()
+
+        val exit = MenuItem("Exit")
+        exit.setOnAction {
+            if(Singleton.windowsAmount == 1){
+                Singleton.windowsAmount = null
+                println("Process should be killed")
+                exitProcess(0)
+            }
+            else {
+                Singleton.windowsAmount = Singleton.windowsAmount!! - 1
+            }
+            stage.close()
+        }
         //Adding all subitems to menu item
-        fileMenu.items.addAll(openFile, saveFile)
+        fileMenu.items.addAll(newFile,newWindow,openFile , saveFile, saveAs, separator, exit)
 
         //Adding edit menu, its items and subitems
         val editMenu = Menu("Edit")
@@ -109,17 +160,26 @@ class Notepad : Application() {
         val formatMenu = Menu("Format")
         //Adding view menu, its items and subitems
         val viewMenu = Menu("View")
+
         //Adding about menu, its items and subitems
         val aboutMenu = Menu("About")
+
         //Creating a credits' subitem
         val ownerButton = MenuItem("Creator")
         //Action listener that opens new window with my info in it
         ownerButton.setOnAction { openNewWindow("Creator of this Notepad is Hezzu", "Creator") }
+
         //Creating subitem to view windows size
         val showSizeButton = MenuItem("Show Window size")
         showSizeButton.setOnAction { openNewWindow("Width: ${stage.width}\nHeight: ${stage.height} ", "Parameters") }
+
+        //Creating a Debug Windows amount menu item
+        val windowsAmount = MenuItem("Windows Amount")
+        windowsAmount.setOnAction {
+            openNewWindow("Windows Amount: ${Singleton.windowsAmount}", "Windows Amount")
+        }
         //Adding subitems to menu item and then items to menu bar
-        aboutMenu.items.addAll(ownerButton, showSizeButton)
+        aboutMenu.items.addAll(ownerButton, showSizeButton, windowsAmount)
         menuBar.menus.addAll(fileMenu, editMenu, formatMenu, viewMenu, aboutMenu)
 
         //Adding menu bar and main text area to layout
@@ -152,6 +212,15 @@ class Notepad : Application() {
             BorderStrokeStyle.SOLID, BorderStrokeStyle.SOLID, BorderStrokeStyle.SOLID, BorderStrokeStyle.SOLID,
             CornerRadii(0.0, 0.0, 5.0, 5.0, false), BorderWidths(1.0, 2.0, 2.0, 2.0), Insets.EMPTY))
 
+        stage.setOnCloseRequest {
+            if(Singleton.windowsAmount == 1){
+                Singleton.windowsAmount = null
+                exitProcess(0)
+            }
+            else {
+                Singleton.windowsAmount = Singleton.windowsAmount!! - 1
+            }
+        }
         //Giving a title, setting a scene of stage and showing it
         stage.title = "Crappy Notepad!"
         stage.scene = scene
