@@ -12,11 +12,13 @@ import javafx.stage.FileChooser
 import javafx.stage.Stage
 import java.io.File
 import java.io.IOException
-
 import java.io.PrintWriter
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.logging.Level
 import java.util.logging.Logger
 import kotlin.system.exitProcess
+
 
 //Ignore null for this var file fuc*er... Details later
 @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
@@ -60,6 +62,8 @@ class Notepad : Application() {
         fileChooser.extensionFilters.add(extFilter)
         //I fought a lot with this fucker... nullable variable that gives file saved or opened. Its nullable as you can save before picking a file
         var file: File? = null
+        val dtf = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss")
+        val now = LocalDateTime.now()
 
 
         //Creating a Menu bar where Menu items will be placed
@@ -152,17 +156,59 @@ class Notepad : Application() {
             stage.close()
         }
         //Adding all subitems to menu item
-        fileMenu.items.addAll(newFile,newWindow,openFile , saveFile, saveAs, separator, exit)
+        fileMenu.items.addAll(newFile, newWindow, openFile , saveFile, saveAs, separator, exit)
 
         //Adding edit menu, its items and subitems
         val editMenu = Menu("Edit")
+        val undo = MenuItem("Undo")
+        undo.setOnAction {
+            textArea.undo()
+        }
+        undo.accelerator = KeyCombination.keyCombination("CTRL + Z")
+        val redo = MenuItem("Redo")
+        redo.setOnAction {
+            textArea.redo()
+        }
+        redo.accelerator = KeyCombination.keyCombination("CTRL + Y")
+        val separator2 = SeparatorMenuItem()
+        val selAll = MenuItem("Select All")
+        selAll.setOnAction {
+            textArea.selectAll()
+        }
+        selAll.accelerator = KeyCombination.keyCombination("CTRL + A")
+        val copy = MenuItem("Copy")
+        copy.setOnAction {
+            textArea.copy()
+        }
+        copy.accelerator = KeyCombination.keyCombination("CTRL + C")
+        val paste = MenuItem("Paste")
+        paste.setOnAction {
+            textArea.paste()
+        }
+        paste.accelerator = KeyCombination.keyCombination("CTRL + V")
+        val cut = MenuItem("Cut")
+        cut.setOnAction {
+            textArea.cut()
+        }
+        cut.accelerator = KeyCombination.keyCombination("CTRL + X")
+        val del = MenuItem("Delete")
+        del.setOnAction {
+            textArea.deleteText(textArea.selection)
+        }
+        del.accelerator = KeyCombination.keyCombination("DELETE")
+        val separator3 = SeparatorMenuItem()
+        val dAt = MenuItem("Get Time and Date")
+        dAt.setOnAction {
+            textArea.text += " ${dtf.format(now)}"
+        }
+        editMenu.items.addAll(undo, redo, separator2,selAll, copy, paste, cut, del, separator3, dAt)
         //Adding format menu, its items and subitems
         val formatMenu = Menu("Format")
         //Adding view menu, its items and subitems
         val viewMenu = Menu("View")
 
         //Adding about menu, its items and subitems
-        val aboutMenu = Menu("About")
+        val aboutMenu = Menu("Debug")
 
         //Creating a credits' subitem
         val ownerButton = MenuItem("Creator")
