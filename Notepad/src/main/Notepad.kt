@@ -8,6 +8,7 @@ import javafx.scene.control.*
 import javafx.scene.input.KeyCombination
 import javafx.scene.layout.*
 import javafx.scene.paint.Color
+import javafx.scene.text.Font
 import javafx.stage.FileChooser
 import javafx.stage.Stage
 import java.io.File
@@ -43,6 +44,29 @@ class Notepad : Application() {
         newWindow.height = 200.0
         newWindow.show()
     }
+    private fun openFonts(title: String)
+    {
+        val panel = Pane()
+        panel.padding = Insets(5.0)
+        panel.style = "-fx-background-color: black;"
+
+        val tf = TextField()
+        tf.padding = Insets(5.0, 0.0, 0.0, 0.0)
+        tf.alignment = Pos.TOP_RIGHT
+        tf.minWidth = 500.0
+
+        panel.children.addAll(tf)
+
+        val scene = Scene(panel, 200.0, 100.0)
+        val newWindow = Stage()
+        newWindow.title = title
+        newWindow.scene = scene
+
+        newWindow.isResizable = false
+        newWindow.width = 600.0
+        newWindow.height = 800.0
+        newWindow.show()
+    }
 
     object Singleton {
         var windowsAmount: Int? = 1
@@ -52,6 +76,7 @@ class Notepad : Application() {
         val vBox = VBox()
         val scene = Scene(vBox, 640.0, 480.0)
         val textArea = TextArea()
+        textArea.font = Font.font ("Arial", 15.0)
 
         //Creating a file chooser for later use in save and open
         val fileChooser = FileChooser()
@@ -197,6 +222,8 @@ class Notepad : Application() {
         }
         del.accelerator = KeyCombination.keyCombination("DELETE")
         val separator3 = SeparatorMenuItem()
+        val find = MenuItem("Find") // Todo
+        val change = MenuItem("Change") //Todo
         val dAt = MenuItem("Get Time and Date")
         dAt.setOnAction {
             textArea.text += " ${dtf.format(now)}"
@@ -204,6 +231,11 @@ class Notepad : Application() {
         editMenu.items.addAll(undo, redo, separator2,selAll, copy, paste, cut, del, separator3, dAt)
         //Adding format menu, its items and subitems
         val formatMenu = Menu("Format")
+        val fonts = MenuItem("Fonts") // Todo
+        fonts.setOnAction {
+            openFonts("Font Selection")
+        }
+        formatMenu.items.addAll(fonts)
         //Adding view menu, its items and subitems
         val viewMenu = Menu("View")
 
