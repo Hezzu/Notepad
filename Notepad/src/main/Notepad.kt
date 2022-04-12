@@ -44,7 +44,7 @@ class Notepad : Application() {
         newWindow.height = 200.0
         newWindow.show()
     }
-    private fun openFonts(title: String)
+    private fun openFonts()
     {
         val panel = Pane()
         panel.padding = Insets(5.0)
@@ -59,7 +59,7 @@ class Notepad : Application() {
 
         val scene = Scene(panel, 200.0, 100.0)
         val newWindow = Stage()
-        newWindow.title = title
+        newWindow.title = "Font Menu"
         newWindow.scene = scene
 
         newWindow.isResizable = false
@@ -67,6 +67,38 @@ class Notepad : Application() {
         newWindow.height = 800.0
         newWindow.show()
     }
+    private fun openFoRMenu(title: String, replace: Boolean = false){
+        val gPane = GridPane()
+        val findLabel = Label("Find: ")
+        gPane.add(findLabel, 0, 0)
+        val infTF = TextField()
+        gPane.add(infTF, 0, 1)
+        val replaceLabel = Label("Replace: ")
+        gPane.add(replaceLabel, 1, 0)
+        val repTF = TextField()
+        gPane.add(repTF, 1, 1)
+
+
+
+        val scene = Scene(gPane, 200.0, 100.0)
+        val newWindow = Stage()
+        newWindow.title = title
+        newWindow.scene = scene
+
+        newWindow.isResizable = false
+        newWindow.width = 600.0
+        newWindow.height = 200.0
+        newWindow.show()
+    }
+//    private fun find(haystack: String, needle: String)
+//    {
+//        var matches = 0
+//        val regex = Regex(needle)
+//        val find = regex.findAll(haystack)
+//        matches = find.count()
+//        println(matches)
+//
+//    }
 
     object Singleton {
         var windowsAmount: Int? = 1
@@ -223,17 +255,23 @@ class Notepad : Application() {
         del.accelerator = KeyCombination.keyCombination("DELETE")
         val separator3 = SeparatorMenuItem()
         val find = MenuItem("Find") // Todo
-        val change = MenuItem("Change") //Todo
+        find.setOnAction {
+            openFoRMenu("Find")
+        }
+        val replace = MenuItem("Replace") //Todo
+        replace.setOnAction {
+            openFoRMenu("Find and Replace", true)
+        }
         val dAt = MenuItem("Get Time and Date")
         dAt.setOnAction {
             textArea.text += " ${dtf.format(now)}"
         }
-        editMenu.items.addAll(undo, redo, separator2,selAll, copy, paste, cut, del, separator3, dAt)
+        editMenu.items.addAll(undo, redo, separator2,selAll, copy, paste, cut, del, separator3, find, replace, dAt)
         //Adding format menu, its items and subitems
         val formatMenu = Menu("Format")
         val fonts = MenuItem("Fonts") // Todo
         fonts.setOnAction {
-            openFonts("Font Selection")
+            openFonts()
         }
         formatMenu.items.addAll(fonts)
         //Adding view menu, its items and subitems
