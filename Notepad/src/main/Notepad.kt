@@ -1,6 +1,7 @@
 package main.notepad
 
 import javafx.application.Application
+import javafx.event.EventHandler
 import javafx.geometry.Insets
 import javafx.geometry.Pos
 import javafx.scene.Scene
@@ -11,6 +12,7 @@ import javafx.scene.paint.Color
 import javafx.scene.text.Font
 import javafx.stage.FileChooser
 import javafx.stage.Stage
+import org.controlsfx.dialog.FontSelectorDialog
 import java.io.File
 import java.io.IOException
 import java.io.PrintWriter
@@ -44,42 +46,74 @@ class Notepad : Application() {
         newWindow.height = 200.0
         newWindow.show()
     }
-    private fun openFonts()
-    {
-        val panel = Pane()
-        panel.padding = Insets(5.0)
-        panel.style = "-fx-background-color: black;"
-
-        val tf = TextField()
-        tf.padding = Insets(5.0, 0.0, 0.0, 0.0)
-        tf.alignment = Pos.TOP_RIGHT
-        tf.minWidth = 500.0
-
-        panel.children.addAll(tf)
-
-        val scene = Scene(panel, 200.0, 100.0)
-        val newWindow = Stage()
-        newWindow.title = "Font Menu"
-        newWindow.scene = scene
-
-        newWindow.isResizable = false
-        newWindow.width = 600.0
-        newWindow.height = 800.0
-        newWindow.show()
-    }
-    private fun openFoRMenu(title: String, replace: Boolean = false){
+    //Find and Replace menu as one Function instead of two separate
+    private fun openFoRMenu(title: String, textArea: TextArea, replace: Boolean = false){
         val gPane = GridPane()
+        //proc from Proceed idk why and rest down there is pretty self-explanatory
+        val proc = Button("Find")
+        gPane.add(proc, 2, 0)
         val findLabel = Label("Find: ")
         gPane.add(findLabel, 0, 0)
         val infTF = TextField()
-        gPane.add(infTF, 0, 1)
-        val replaceLabel = Label("Replace: ")
-        gPane.add(replaceLabel, 1, 0)
-        val repTF = TextField()
-        gPane.add(repTF, 1, 1)
-
-
-
+        gPane.add(infTF, 1, 0)
+        //Variable which will hold information on current Find index
+        var tempCaret = 0
+        //if Replace boolean is true it will be a Find and Replace window, else it will be only find window
+        if(replace) {
+            //pretty self-explanatory too
+            val replaceLabel = Label("Replace: ")
+            gPane.add(replaceLabel, 0, 1)
+            val repTF = TextField()
+            gPane.add(repTF, 1, 1)
+            //Change text on Button in Replace menu
+            proc.text = "Find and Replace"
+            val procA = Button("Find and Replace All")
+            gPane.add(procA, 2, 1)
+            //Event Handler for proc button
+            proc.setOnAction {
+                //if Find Field is not empty or value isn't null (That's not the same) do the magic
+                if ((infTF.text != null) && infTF.text.isNotEmpty()) {
+                    //Setting index for future Range Select
+                    val index: Int = textArea.text.indexOf(infTF.text, tempCaret)
+                    //If nothing is found indexOf will return -1, so we check for that value and reset our temp Caret Variable, so it can find beginning again
+                    if (index == -1) {
+                        tempCaret = 0
+                    } else {
+                        //We select Found Word, Set new Temp Caret and replace the word with what user wanted
+                        textArea.selectRange(index, index + infTF.length)
+                        tempCaret = textArea.anchor
+                        textArea.deleteText(textArea.selection)
+                        textArea.insertText(tempCaret, repTF.text)
+                    }
+            //For some reason they implemented replace all but not find or find and replace... This is much shorter and easier
+            procA.setOnAction {
+                textArea.text = textArea.text.replace(infTF.text, repTF.text)
+            }
+                //Else if replace is not true, aka Its find not replace
+                } else {
+                    proc.setOnAction {
+                        if ((infTF.text != null) && infTF.text.isNotEmpty()) {
+                            val index: Int = textArea.text.indexOf(infTF.text, tempCaret)
+                            if (index == -1) {
+                                //Here we reset AND select first word again so you don't have to double tap when at the end of the line
+                                tempCaret = 0
+                                //We need to set both anchor and Caret position manually as you can't reassign val which index is
+                                textArea.selectRange(textArea.text.indexOf(infTF.text), textArea.text.indexOf(infTF.text) + infTF.length)
+                            } else {
+                                //select found text and set new temp Caret
+                                textArea.selectRange(index, index + infTF.length)
+                                tempCaret = textArea.caretPosition
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        //self-explanatory, Horizontal and Vertical gap between grid items and Align it Center-Left
+        gPane.hgap = 5.0
+        gPane.vgap = 5.0
+        gPane.alignment = Pos.CENTER_LEFT
+        //Rest of needed things to open a Window and It's done
         val scene = Scene(gPane, 200.0, 100.0)
         val newWindow = Stage()
         newWindow.title = title
@@ -90,16 +124,8 @@ class Notepad : Application() {
         newWindow.height = 200.0
         newWindow.show()
     }
-//    private fun find(haystack: String, needle: String)
-//    {
-//        var matches = 0
-//        val regex = Regex(needle)
-//        val find = regex.findAll(haystack)
-//        matches = find.count()
-//        println(matches)
-//
-//    }
 
+    //Singleton which counts existing windows, so it can exit process when closing last
     object Singleton {
         var windowsAmount: Int? = 1
     }
@@ -199,7 +225,7 @@ class Notepad : Application() {
         saveAs.accelerator = KeyCombination.keyCombination("Ctrl+Shift+S")
 
         val separator = SeparatorMenuItem()
-
+        //Using said Singleton to count windows
         val exit = MenuItem("Exit")
         exit.setOnAction {
             if(Singleton.windowsAmount == 1){
@@ -217,6 +243,7 @@ class Notepad : Application() {
 
         //Adding edit menu, its items and subitems
         val editMenu = Menu("Edit")
+        //All of them had functions making things easier so nothing to explain for now
         val undo = MenuItem("Undo")
         undo.setOnAction {
             textArea.undo()
@@ -254,14 +281,15 @@ class Notepad : Application() {
         }
         del.accelerator = KeyCombination.keyCombination("DELETE")
         val separator3 = SeparatorMenuItem()
-        val find = MenuItem("Find") // Todo
+        val find = MenuItem("Find")
         find.setOnAction {
-            openFoRMenu("Find")
+            openFoRMenu("Find", textArea)
         }
-        val replace = MenuItem("Replace") //Todo
+        val replace = MenuItem("Replace")
         replace.setOnAction {
-            openFoRMenu("Find and Replace", true)
+            openFoRMenu("Find and Replace", textArea, true)
         }
+        //dAt (Date and Time inserts current System date and time to text with spacebar first)
         val dAt = MenuItem("Get Time and Date")
         dAt.setOnAction {
             textArea.text += " ${dtf.format(now)}"
@@ -269,9 +297,20 @@ class Notepad : Application() {
         editMenu.items.addAll(undo, redo, separator2,selAll, copy, paste, cut, del, separator3, find, replace, dAt)
         //Adding format menu, its items and subitems
         val formatMenu = Menu("Format")
-        val fonts = MenuItem("Fonts") // Todo
+        //Font menu and using implemented window of Controlsfx
+        val fonts = MenuItem("Fonts")
         fonts.setOnAction {
-            openFonts()
+            val fs = FontSelectorDialog(null)
+            fs.title = "Select Font"
+            fs.show()
+            //After closing window (Pressing Ok, cancel or closing it normally) it gets result from it
+            fs.onCloseRequest = EventHandler {
+                if (fs.result != null) {
+                    textArea.style = null
+                    textArea.font = fs.result
+                }
+            }
+
         }
         formatMenu.items.addAll(fonts)
         //Adding view menu, its items and subitems
@@ -328,6 +367,7 @@ class Notepad : Application() {
             BorderStrokeStyle.SOLID, BorderStrokeStyle.SOLID, BorderStrokeStyle.SOLID, BorderStrokeStyle.SOLID,
             CornerRadii(0.0, 0.0, 5.0, 5.0, false), BorderWidths(1.0, 2.0, 2.0, 2.0), Insets.EMPTY))
 
+        //Another function which counts windows closed manually instead of closed with button
         stage.setOnCloseRequest {
             if(Singleton.windowsAmount == 1){
                 Singleton.windowsAmount = null
