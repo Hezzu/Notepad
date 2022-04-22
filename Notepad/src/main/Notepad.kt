@@ -51,24 +51,24 @@ class Notepad : Application() {
         val gPane = GridPane()
         //proc from Proceed idk why and rest down there is pretty self-explanatory
         val proc = Button("Find")
-        gPane.add(proc, 2, 0)
+        gPane.add(proc, 3, 0)
         val findLabel = Label("Find: ")
-        gPane.add(findLabel, 0, 0)
+        gPane.add(findLabel, 1, 0)
         val infTF = TextField()
-        gPane.add(infTF, 1, 0)
+        gPane.add(infTF, 2, 0)
         //Variable which will hold information on current Find index
         var tempCaret = 0
         //if Replace boolean is true it will be a Find and Replace window, else it will be only find window
         if(replace) {
             //pretty self-explanatory too
             val replaceLabel = Label("Replace: ")
-            gPane.add(replaceLabel, 0, 1)
+            gPane.add(replaceLabel, 1, 1)
             val repTF = TextField()
-            gPane.add(repTF, 1, 1)
+            gPane.add(repTF, 2, 1)
             //Change text on Button in Replace menu
             proc.text = "Find and Replace"
             val procA = Button("Find and Replace All")
-            gPane.add(procA, 2, 1)
+            gPane.add(procA, 3, 1)
             //Event Handler for proc button
             proc.setOnAction {
                 //if Find Field is not empty or value isn't null (That's not the same) do the magic
@@ -120,7 +120,7 @@ class Notepad : Application() {
         newWindow.scene = scene
 
         newWindow.isResizable = false
-        newWindow.width = 600.0
+        newWindow.width = 400.0
         newWindow.height = 200.0
         newWindow.show()
     }
@@ -312,9 +312,17 @@ class Notepad : Application() {
             }
 
         }
-        formatMenu.items.addAll(fonts)
+        val wrap = CheckMenuItem("Text Wrap")
+        wrap.setOnAction {
+            textArea.isWrapText = !textArea.isWrapText
+        }
+
+        formatMenu.items.addAll(wrap, fonts)
         //Adding view menu, its items and subitems
-        val viewMenu = Menu("View")
+//        val viewMenu = Menu("View")
+//        Disabled For now because i don't know how to implement it rn
+//
+//        viewMenu.items.addAll()
 
         //Adding about menu, its items and subitems
         val aboutMenu = Menu("Debug")
@@ -335,7 +343,7 @@ class Notepad : Application() {
         }
         //Adding subitems to menu item and then items to menu bar
         aboutMenu.items.addAll(ownerButton, showSizeButton, windowsAmount)
-        menuBar.menus.addAll(fileMenu, editMenu, formatMenu, viewMenu, aboutMenu)
+        menuBar.menus.addAll(fileMenu, editMenu, formatMenu, aboutMenu)
 
         //Adding menu bar and main text area to layout
         vBox.children.addAll(menuBar, textArea)
